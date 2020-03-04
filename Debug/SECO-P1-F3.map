@@ -201,15 +201,15 @@ Discarded input sections
  .bss.i         0x0000000000000000        0x4 Core/Src/main.o
  .text.HAL_GPIO_EXTI_Callback
                 0x0000000000000000       0x16 Core/Src/main.o
- .rodata        0x0000000000000000        0xc Core/Src/main.o
+ .rodata        0x0000000000000000       0x16 Core/Src/main.o
  .text.HAL_TIM_PeriodElapsedCallback
-                0x0000000000000000      0x118 Core/Src/main.o
+                0x0000000000000000      0x120 Core/Src/main.o
  .text.move     0x0000000000000000      0x144 Core/Src/main.o
  .text.stop     0x0000000000000000       0x2c Core/Src/main.o
  .text.selec_voltage
                 0x0000000000000000       0x9c Core/Src/main.o
  .text.enviarcuenta
-                0x0000000000000000       0x28 Core/Src/main.o
+                0x0000000000000000       0x68 Core/Src/main.o
  .text.obtenerdatos
                 0x0000000000000000       0x3c Core/Src/main.o
  .text.velocidad_motor
@@ -4284,23 +4284,23 @@ OUTPUT(SECO-P1-F3.elf elf32-littlearm)
  .debug_macro   0x000000000001d597      0x1ce Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.o
  .debug_macro   0x000000000001d765      0x1eb Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.o
 
-.debug_line     0x0000000000000000     0xa2b2
+.debug_line     0x0000000000000000     0xa2bc
  .debug_line    0x0000000000000000      0x6ae Core/Src/gpio.o
- .debug_line    0x00000000000006ae      0xa24 Core/Src/main.o
- .debug_line    0x00000000000010d2      0x6ab Core/Src/stm32f3xx_hal_msp.o
- .debug_line    0x000000000000177d      0x74f Core/Src/stm32f3xx_it.o
- .debug_line    0x0000000000001ecc      0x6cb Core/Src/system_stm32f3xx.o
- .debug_line    0x0000000000002597      0x7bf Core/Src/tim.o
- .debug_line    0x0000000000002d56      0x6e1 Core/Src/usart.o
- .debug_line    0x0000000000003437       0x85 Core/Startup/startup_stm32f303retx.o
- .debug_line    0x00000000000034bc      0x886 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.o
- .debug_line    0x0000000000003d42      0x9bb Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.o
- .debug_line    0x00000000000046fd      0x863 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.o
- .debug_line    0x0000000000004f60      0xe01 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc.o
- .debug_line    0x0000000000005d61      0xa27 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc_ex.o
- .debug_line    0x0000000000006788     0x1be3 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.o
- .debug_line    0x000000000000836b      0xd5b Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.o
- .debug_line    0x00000000000090c6     0x11ec Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.o
+ .debug_line    0x00000000000006ae      0xa2e Core/Src/main.o
+ .debug_line    0x00000000000010dc      0x6ab Core/Src/stm32f3xx_hal_msp.o
+ .debug_line    0x0000000000001787      0x74f Core/Src/stm32f3xx_it.o
+ .debug_line    0x0000000000001ed6      0x6cb Core/Src/system_stm32f3xx.o
+ .debug_line    0x00000000000025a1      0x7bf Core/Src/tim.o
+ .debug_line    0x0000000000002d60      0x6e1 Core/Src/usart.o
+ .debug_line    0x0000000000003441       0x85 Core/Startup/startup_stm32f303retx.o
+ .debug_line    0x00000000000034c6      0x886 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.o
+ .debug_line    0x0000000000003d4c      0x9bb Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.o
+ .debug_line    0x0000000000004707      0x863 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.o
+ .debug_line    0x0000000000004f6a      0xe01 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc.o
+ .debug_line    0x0000000000005d6b      0xa27 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc_ex.o
+ .debug_line    0x0000000000006792     0x1be3 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.o
+ .debug_line    0x0000000000008375      0xd5b Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.o
+ .debug_line    0x00000000000090d0     0x11ec Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.o
 
 .debug_str      0x0000000000000000    0xb0218
  .debug_str     0x0000000000000000    0xa7d7a Core/Src/gpio.o

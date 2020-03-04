@@ -54,7 +54,7 @@
 int32_t count = 0;
 int cuenta = 0;
 int16_t count_pul = 0;
-uint32_t medidas[num_muestras];
+int medidas[num_muestras];
 uint32_t i = 0;
 char* str_name;
 /* USER CODE END PV */
@@ -271,8 +271,8 @@ void selec_voltage (double_t V){
 
 void enviarcuenta(){
 	for(int i = 0; i<num_muestras; i++){
-		//str_name = sprintf(i + "\t" + medidas[i] + "\n");
-		//HAL_UART_Transmit(&huart3,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
+		sprintf(str_name, "%d \t %d \n", i, medidas[i]);
+		HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
 	}
 }
 

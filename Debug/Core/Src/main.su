@@ -5,7 +5,7 @@ main.c:194:6:HAL_TIM_PeriodElapsedCallback	24	static
 main.c:224:6:move	32	static
 main.c:253:6:stop	8	static
 main.c:260:6:selec_voltage	32	static
-main.c:272:6:enviarcuenta	16	static
+main.c:272:6:enviarcuenta	24	static
 main.c:279:6:obtenerdatos	16	static
 main.c:287:6:reductora	8	static
 main.c:292:8:velocidad_motor	24	static
