@@ -56,7 +56,7 @@ int cuenta = 0;
 int16_t count_pul = 0;
 int medidas[num_muestras];
 uint32_t i = 0;
-char* str_name[100];
+char str_name[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -192,6 +192,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			cuenta = __HAL_TIM_GET_COUNTER(&htim2);
 			sprintf(str_name, "Cuenta = %d", cuenta);
 			HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
+			HAL_TIM_Base_Stop_IT(&htim6);
 		}
 	}
 	else if (htim->Instance==TIM7) {
@@ -272,7 +273,7 @@ void enviarcuenta(){
 void obtenerdatos(double_t V){
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
 	HAL_TIM_Base_Start_IT(&htim6);
-	//HAL_TIM_Base_Start_IT(&htim7);
+	HAL_TIM_Base_Start_IT(&htim7);
 	count_pul = 0;
 	selec_voltage(V);
 }
