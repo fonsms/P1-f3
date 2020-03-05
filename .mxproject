@@ -16,11 +16,11 @@ HeaderFiles#3=C:/Users/ejdel/Desktop/Uni/SECO/P1-f3/Core/Inc/usart.h
 HeaderFiles#4=C:/Users/ejdel/Desktop/Uni/SECO/P1-f3/Core/Inc/stm32f3xx_it.h
 HeaderFiles#5=C:/Users/ejdel/Desktop/Uni/SECO/P1-f3/Core/Inc/stm32f3xx_hal_conf.h
 HeaderFiles#6=C:/Users/ejdel/Desktop/Uni/SECO/P1-f3/Core/Inc/main.h
-HeaderFiles=;
 SourceFiles#3=C:/Users/ejdel/Desktop/Uni/SECO/P1-f3/Core/Src/usart.c
 SourceFiles#4=C:/Users/ejdel/Desktop/Uni/SECO/P1-f3/Core/Src/stm32f3xx_it.c
 SourceFiles#5=C:/Users/ejdel/Desktop/Uni/SECO/P1-f3/Core/Src/stm32f3xx_hal_msp.c
 SourceFiles#6=C:/Users/ejdel/Desktop/Uni/SECO/P1-f3/Core/Src/main.c
+HeaderFiles=;
 SourceFiles=;
 
 [PreviousLibFiles]

@@ -56,7 +56,7 @@ int cuenta = 0;
 int16_t count_pul = 0;
 int medidas[num_muestras];
 uint32_t i = 0;
-char* str_name;
+char* str_name[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -127,14 +127,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  /*UART
-	  uint8_t buffer_trasmite[] =  malloc(100);
-	  uint8_t buffer_trasmite[4];
-	  HAL_UART_Transmit(&huart4, buffer_trasmite, sizeof(buffer_trasmite), HAL_MAX_DELAY);
-	  //HAL_UART_Receive(&huart4, pData, sideof(buffer), HAL_MAX_DELAY);
-	  */
-
-	    }
+  }
   /* USER CODE END 3 */
 }
 
@@ -271,7 +264,7 @@ void selec_voltage (double_t V){
 
 void enviarcuenta(){
 	for(int i = 0; i<num_muestras; i++){
-		sprintf(str_name, "%d \t %d \n", i, medidas[i]);
+		sprintf(str_name, "%d\t%d\n", i, medidas[i]);
 		HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
 	}
 }
