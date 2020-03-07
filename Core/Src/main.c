@@ -57,6 +57,8 @@ int16_t count_pul = 0;
 int medidas[num_muestras];
 uint32_t i = 0;
 char str_name[100];
+uint32_t pos_i = 0;
+int cte_prop = 5;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,7 +69,7 @@ void obtenerdatos(double_t V);
 void selec_voltage(double_t V);
 void stop();
 void enviarcuenta();
-double velocidad_motor(double pos, int num);
+double controlador(double pos);
 void reductora();
 /* USER CODE END PFP */
 
@@ -109,7 +111,6 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM6_Init();
-  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
@@ -188,27 +189,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim->Instance==TIM6) {
 		medidas[i] = __HAL_TIM_GET_COUNTER(&htim2);
 		i += 1;
-		if(i == 4000){
-			cuenta = __HAL_TIM_GET_COUNTER(&htim2);
-			sprintf(str_name, "Cuenta = %d", cuenta);
-			HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
-			HAL_TIM_Base_Stop_IT(&htim6);
+		if(i == 600){
+			selec_voltage(0);
+			medidas[i] = __HAL_TIM_GET_COUNTER(&htim2);
+			i += 1;
 		}
-	}
-	else if (htim->Instance==TIM7) {
-		count_pul += 1;
-		switch(count_pul){
-			case 0:
-				selec_voltage(1);
-			case 1:
-				selec_voltage(0);
-			case 2 :
-				selec_voltage(0);
-				HAL_TIM_Base_Stop_IT(&htim6);
-				HAL_TIM_Base_Stop_IT(&htim7);
-				enviarcuenta();
-			default:
-				selec_voltage(0);
+		else if(i == 1200){
+			selec_voltage(0);
+			medidas[i] = __HAL_TIM_GET_COUNTER(&htim2);
+			HAL_TIM_Base_Stop_IT(&htim6);
+			enviarcuenta();
 		}
 	}
 	else {
@@ -264,7 +254,7 @@ void selec_voltage (double_t V){
 }
 
 void enviarcuenta(){
-	for(int i = 0; i<num_muestras; i++){
+	for(int i = 0; i<1200; i++){
 		sprintf(str_name, "%d\t%d\n", i, medidas[i]);
 		HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
 	}
@@ -283,9 +273,31 @@ void reductora(){
 	HAL_TIM_Base_Start_IT(&htim6);
 }
 
-double velocidad_motor(double pos, int num){
-	//return (pos/pulse_per_revolution)*2*M_PI/(i*0.01);
-	return 2.0;
+void controlador(uint32_t pos){
+	pos_i = __HAL_TIM_GET_COUNTER(&htim2);
+	uint32_t pos_pulsos = pos*pulse_per_revolution/2*M_PI;
+	uint32_t pos_ideal;
+	pos_ideal = pos_i + pos_pulsos;
+	if(pos_ideal > 65535){
+		pos_ideal = pos_ideal - 65535;
+		pos_i = pos_i - 65535;
+	}
+	else if(pos_ideal < 0){
+		pos_ideal = pos_ideal + 65535;
+		pos_i = pos_i + 65535;
+	}
+	if (pos_i != pos_ideal){
+		selec_voltage(cte_prop*(pos_ideal - pos_i));
+		controlador(pos);
+	}
+	else{
+		selec_voltage(0);
+	}
+
+	/*
+
+
+	 */
 }
 /* USER CODE END 4 */
 
