@@ -180,11 +180,19 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-//we have to use this function for all the GPIO interruption, we use the hall that call this function
+/**
+  * @brief  EXTI line detection callback.
+  * @param  GPIO_Pin Specifies the port pin connected to corresponding EXTI line.
+  * @retval None
+  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 }
-
+/**
+  * @brief  Period elapsed callback in non-blocking mode
+  * @param  htim TIM handle
+  * @retval None
+  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim->Instance==TIM6) {
 		medidas[i] = __HAL_TIM_GET_COUNTER(&htim2);
@@ -205,6 +213,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 }
 
+/**
+  * @brief  Start PWM pins with specific duties cycles
+  * @param  v1: Duty cycle of first PWM .
+  * @param  v2:  Duty cycle of second PWM.
+  * @retval None
+  */
 void move(double_t v1,double_t v2){
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
@@ -233,14 +247,21 @@ void move(double_t v1,double_t v2){
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,v1);
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2,v2);
 }
-
+/**
+  * @brief  Set both PWM to 0 and lock the enable A
+  * @retval None
+  */
 void stop(){
 	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
 	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 }
 
-
+/**
+  * @brief  Estimate the duty cycle of the PWM, according to the mean voltage selected and call move function with this values.
+  * @param  V: the average voltage of the PWM.
+  * @retval None
+  */
 void selec_voltage (double_t V){
 	double tension_pwm;
 	tension_pwm = (V/12)*999;
@@ -252,14 +273,21 @@ void selec_voltage (double_t V){
 	}
 
 }
-
+/**
+  * @brief  Send measures via ST link USB for UART
+  * @retval None
+  */
 void enviarcuenta(){
 	for(int i = 0; i<1200; i++){
 		sprintf(str_name, "%d\t%d\n", i, medidas[i]);
 		HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
 	}
 }
-
+/**
+  * @brief  Test start with certain voltage and sampling counter
+  * @param  V: the average voltage of the PWM.
+  * @retval None
+  */
 void obtenerdatos(double_t V){
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
 	HAL_TIM_Base_Start_IT(&htim6);
@@ -267,13 +295,21 @@ void obtenerdatos(double_t V){
 	count_pul = 0;
 	selec_voltage(V);
 }
-
+/**
+  * @brief Reducer measurement experimentally
+  * @retval None
+  */
 void reductora(){
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
 	HAL_TIM_Base_Start_IT(&htim6);
 }
-
+/**
+  * @brief	Linear Controller
+  * @param  pos: The position we want to move the engine in radians
+  * @retval None
+  */
 void controlador(uint32_t pos){
+	//MAL TENEMOS QUE COMENTARLO
 	pos_i = __HAL_TIM_GET_COUNTER(&htim2);
 	uint32_t pos_pulsos = pos*pulse_per_revolution/2*M_PI;
 	uint32_t pos_ideal;
@@ -287,6 +323,7 @@ void controlador(uint32_t pos){
 		pos_i = pos_i + 65535;
 	}
 	if (pos_i != pos_ideal){
+		//porque 5???
 		selec_voltage(cte_prop*(pos_ideal - pos_i));
 		controlador(pos);
 	}
