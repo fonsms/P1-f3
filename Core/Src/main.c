@@ -49,7 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define pulse_per_revolution 3600
+#define pulse_per_revolution 3536
 #define num_muestras 7000
 int32_t count = 0;
 int cuenta = 0;
@@ -57,8 +57,10 @@ int16_t count_pul = 0;
 int medidas[num_muestras];
 uint32_t i = 0;
 char str_name[10000];
-uint32_t pos_i = 0;
-int cte_prop = 5;
+int cte_prop = 10;
+double referencia = 0;
+uint32_t last_value = 0;
+int64_t pos_i = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,8 +71,9 @@ void obtenerdatos(double_t V);
 void selec_voltage(double_t V);
 void stop();
 void enviarcuenta();
-double controlador(double pos);
+void controlador();
 void reductora();
+void setref(double ref);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -116,7 +119,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_Encoder_Start_IT(&htim2, TIM_CHANNEL_ALL);
   HAL_TIM_Base_Init(&htim6);
-  reductora();
+  setref(-M_PI);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -126,7 +129,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
+	  controlador();
   }
   /* USER CODE END 3 */
 }
@@ -193,6 +196,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   * @retval None
   */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	static int32_t current_value = 0;
+	static int32_t diff = 0;
 	if (htim->Instance==TIM6) {
 		medidas[i] = __HAL_TIM_GET_COUNTER(&htim2);
 		i += 1;
@@ -207,6 +212,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			HAL_TIM_Base_Stop_IT(&htim6);
 			enviarcuenta();
 		}
+	}
+	else if(htim->Instance==TIM2){
+		current_value = __HAL_TIM_GET_COUNTER(&htim2);
+		if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)){
+			if(current_value>=last_value){
+				diff = 65535 - current_value + last_value;
+			}
+			else{
+				diff = last_value - current_value;
+			}
+		}
+		else {
+			if (current_value <= last_value) {
+				diff = 65535 - last_value + current_value;
+			} else {
+				diff = current_value - last_value;
+			}
+		}
+		last_value = current_value;
+		pos_i = pos_i + diff;
 	}
 	else {
 	}
@@ -243,8 +268,8 @@ void move(double_t v1,double_t v2){
 		v1 = 0;
 		v2 = 0;
 	}
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,v1);
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2,v2);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,v2);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2,v1);
 }
 /**
   * @brief  Set both PWM to 0 and lock the enable A
@@ -302,38 +327,43 @@ void reductora(){
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
 	HAL_TIM_Base_Start_IT(&htim6);
 }
+
 /**
-  * @brief	Linear Controller
-  * @param  pos: The position we want to move the engine in radians
+  * @brief Set reference for controller
+  * @param ref: reference
   * @retval None
   */
-void controlador(uint32_t pos){
-	//MAL TENEMOS QUE COMENTARLO
-	pos_i = __HAL_TIM_GET_COUNTER(&htim2);
-	uint32_t pos_pulsos = pos*pulse_per_revolution/2*M_PI;
-	uint32_t pos_ideal;
-	pos_ideal = pos_i + pos_pulsos;
-	if(pos_ideal > 65535){
-		pos_ideal = pos_ideal - 65535;
-		pos_i = pos_i - 65535;
-	}
-	else if(pos_ideal < 0){
-		pos_ideal = pos_ideal + 65535;
-		pos_i = pos_i + 65535;
-	}
-	if (pos_i != pos_ideal){
-		//porque 5???
-		selec_voltage(cte_prop*(pos_ideal - pos_i));
-		controlador(pos);
-	}
-	else{
-		selec_voltage(0);
-	}
+void setref(double ref){
+	referencia = ref;
+}
 
-	/*
+/**
+  * @brief	Linear Controller
+  * @retval None
+  */
+void controlador(){
+	static double e = 0;
+	static int32_t current_value = 0;
+	static int32_t diff = 0;
 
-
-	 */
+	current_value = __HAL_TIM_GET_COUNTER(&htim2);
+	if (__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)) {
+		if (current_value > last_value) {
+			diff = 65535 - current_value + last_value;
+		} else {
+			diff = last_value - current_value;
+		}
+	} else {
+		if (current_value < last_value) {
+			diff = 65535 - last_value + current_value;
+		} else {
+			diff = current_value - last_value;
+		}
+	}
+	last_value = current_value;
+	pos_i = pos_i + diff;
+	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
+	selec_voltage(cte_prop * e);
 }
 /* USER CODE END 4 */
 
