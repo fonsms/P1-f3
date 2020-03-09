@@ -56,7 +56,7 @@ int cuenta = 0;
 int16_t count_pul = 0;
 int medidas[num_muestras];
 uint32_t i = 0;
-char str_name[100];
+char str_name[10000];
 uint32_t pos_i = 0;
 int cte_prop = 5;
 /* USER CODE END PV */
@@ -116,7 +116,6 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_Encoder_Start_IT(&htim2, TIM_CHANNEL_ALL);
   HAL_TIM_Base_Init(&htim6);
-  HAL_TIM_Base_Init(&htim7);
   reductora();
   /* USER CODE END 2 */
 
@@ -279,9 +278,10 @@ void selec_voltage (double_t V){
   */
 void enviarcuenta(){
 	for(int i = 0; i<1200; i++){
-		sprintf(str_name, "%d\t%d\n", i, medidas[i]);
-		HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
+		sprintf(str_name, "%s%d\t%d\n",str_name , i, medidas[i]);
 	}
+	sprintf(str_name, "%s#",str_name);
+	HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
 }
 /**
   * @brief  Test start with certain voltage and sampling counter
@@ -291,7 +291,6 @@ void enviarcuenta(){
 void obtenerdatos(double_t V){
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
 	HAL_TIM_Base_Start_IT(&htim6);
-	HAL_TIM_Base_Start_IT(&htim7);
 	count_pul = 0;
 	selec_voltage(V);
 }
