@@ -50,13 +50,13 @@
 
 /* USER CODE BEGIN PV */
 #define pulse_per_revolution 3536
-#define num_muestras 7000
+#define num_muestras 1200
 int32_t count = 0;
 int cuenta = 0;
 int16_t count_pul = 0;
-int medidas[num_muestras];
+double medidas[num_muestras];
 uint32_t i = 0;
-char str_name[10000];
+char str_name[20001];
 int cte_prop = 10;
 double referencia = 0;
 uint32_t last_value = 0;
@@ -74,6 +74,7 @@ void enviarcuenta();
 void controlador();
 void reductora();
 void setref(double ref);
+void funtion_trasfer(double_t V);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -115,21 +116,26 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+ HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+ HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_Encoder_Start_IT(&htim2, TIM_CHANNEL_ALL);
-  HAL_TIM_Base_Init(&htim6);
-  setref(-M_PI);
+  //HAL_TIM_Base_Init(&htim6);
+  //setref(-M_PI);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  funtion_trasfer(12);
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  controlador();
+	  //controlador();
+
+
+
+
   }
   /* USER CODE END 3 */
 }
@@ -203,12 +209,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		i += 1;
 		if(i == 600){
 			selec_voltage(0);
-			medidas[i] = __HAL_TIM_GET_COUNTER(&htim2);
+
 			i += 1;
 		}
 		else if(i == 1200){
 			selec_voltage(0);
-			medidas[i] = __HAL_TIM_GET_COUNTER(&htim2);
+
 			HAL_TIM_Base_Stop_IT(&htim6);
 			enviarcuenta();
 		}
@@ -245,8 +251,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
   */
 void move(double_t v1,double_t v2){
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 	v1 = round(v1);
 	v2 = round(v2);
 
@@ -268,8 +272,8 @@ void move(double_t v1,double_t v2){
 		v1 = 0;
 		v2 = 0;
 	}
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,v2);
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2,v1);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,v1);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2,v2);
 }
 /**
   * @brief  Set both PWM to 0 and lock the enable A
@@ -303,7 +307,7 @@ void selec_voltage (double_t V){
   */
 void enviarcuenta(){
 	for(int i = 0; i<1200; i++){
-		sprintf(str_name, "%s%d\t%d\n",str_name , i, medidas[i]);
+		sprintf(str_name, "%s%d\t%f\n",str_name , i,medidas[i]);
 	}
 	sprintf(str_name, "%s#",str_name);
 	HAL_UART_Transmit(&huart2,(uint8_t*) str_name, strlen(str_name), HAL_MAX_DELAY);
@@ -364,6 +368,12 @@ void controlador(){
 	pos_i = pos_i + diff;
 	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
 	selec_voltage(cte_prop * e);
+}
+void funtion_trasfer(double_t V){
+	__HAL_TIM_SET_COUNTER(&htim2, 0);
+	HAL_TIM_Base_Start_IT(&htim6);
+	selec_voltage(V);
+
 }
 /* USER CODE END 4 */
 
