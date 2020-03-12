@@ -52,6 +52,7 @@
 
 /* USER CODE BEGIN PV */
 #define pulse_per_revolution 3536
+#define max_enconder_count 65535
 #define num_muestras 1200
 int32_t count = 0;
 double cuenta = 0;
@@ -60,7 +61,7 @@ double medidas[num_muestras];
 uint32_t i = 0;
 char str_name_reducer[100];
 char str_name[20001];
-double cte_prop = 1;
+double cte_prop = 10;
 double referencia = 0;
 double current_value = 0;
 double diff = 0;
@@ -70,7 +71,7 @@ double e = 0;
 //Flags
 bool FLAG_REDUCER = false;
 bool FLAG_TRANSFER = false;
-FLAG_LINEAR_CONTROLER = false;
+bool FLAG_LINEAR_CONTROLER = false;
 
 /* USER CODE END PV */
 
@@ -140,14 +141,14 @@ int main(void)
 	//reductora();// Uncommenting this line to calculate the reducer value
 	 //funtion_trasfer(12);// Uncommenting this line to calculate the function transfer
 
-	 setref(+M_PI); // set a first  ref to linear controler
+	 setref(3*M_PI); // set a first  ref to linear controler
 
 	while (1)
 	{
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		controlador_lineal(pos_i);
+//		controlador_lineal(pos_i);
 
 
 
@@ -219,6 +220,37 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 	if (htim->Instance==TIM6) {
+
+		if (FLAG_LINEAR_CONTROLER == true) {
+
+			current_value =__HAL_TIM_GET_COUNTER(&htim2);
+			if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)){
+
+
+				if(current_value <= last_value){
+					   diff = last_value - current_value;
+				}
+				else{
+					diff = (max_enconder_count-current_value) + last_value;
+				}
+
+			}
+			else {
+
+				if (current_value < last_value) {
+					diff = (max_enconder_count - last_value) + current_value;
+				} else {
+					diff = current_value - last_value;
+
+				}
+
+			}
+
+			last_value = current_value;
+			pos_i = pos_i + diff;
+			controlador_lineal(pos_i);
+
+		}
 		if (FLAG_REDUCER == true) {
 			i += 1;
 			if(i == 4000){
@@ -246,32 +278,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}
 
 	}
-//		else if(htim->Instance==TIM2){
-//		    current_value =__HAL_TIM_GET_COUNTER(&htim2);
-//		    if(referencia < 0){
-//		      if(current_value>last_value){
-//		        diff = 65535 - current_value + last_value;
-//		      }
-//		      else{
-//		        diff = last_value - current_value;
-//		      }
-//		    }
-//		    else {
-//		      if (current_value < last_value) {
-//		        diff = 65535 - last_value + current_value;
-//		      } else {
-//		        diff = current_value - last_value;
-//
-//		      }
-//		    }
-//
-//		    last_value = current_value;
-//		    pos_i = pos_i + diff;
+		else if(htim->Instance==TIM2){
+
+				cuenta = 1;
+				sprintf(str_name_reducer, "Cuenta = %f", cuenta);
+				HAL_UART_Transmit(&huart2,(uint8_t*) str_name_reducer, strlen(str_name_reducer), HAL_MAX_DELAY);
 
 
 
 
-	//}
+
+	}
 	else {
 	}
 }
@@ -380,8 +397,8 @@ void reductora(){
  */
 void setref(double ref){
 	referencia = ref;
-	FLAG_LINEAR_CONTROLER = false;
-	__HAL_TIM_SET_COUNTER(&htim2, 0);
+	FLAG_LINEAR_CONTROLER = true;
+	HAL_TIM_Base_Start_IT(&htim6);
 }
 
 /**
@@ -389,49 +406,12 @@ void setref(double ref){
  * @retval None
  */
 void controlador_lineal(double pos_i){
-
-	current_value =__HAL_TIM_GET_COUNTER(&htim2);
-	if (FLAG_LINEAR_CONTROLER== true) {
-		if(referencia < 0 ){
-			if(current_value>last_value){
-				diff = 65535 - current_value + last_value;
-			}
-			else{
-				diff = last_value - current_value;
-			}
-		}
-		else {
-			if (current_value < last_value) {
-				diff = 65535 - last_value + current_value;
-			} else {
-				diff = current_value - last_value;
-
-			}
-		}
-		FLAG_LINEAR_CONTROLER = false;
-	}
-	if (FLAG_LINEAR_CONTROLER == false) {
-	if(! __HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)){
-		if(current_value>last_value){
-			diff = 65535 - current_value + last_value;
-		}
-		else{
-			diff = last_value - current_value;
-		}
-	}
-	else {
-		if (current_value < last_value) {
-			diff = 65535 - last_value + current_value;
-		} else {
-			diff = current_value - last_value;
-
-		}
-	}
-	}
-
-	last_value = current_value;
-	pos_i = pos_i + diff;
+if (referencia <0) {
+	e = referencia + (pos_i * 2 * M_PI / pulse_per_revolution);
+}else {
 	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
+}
+
 	selec_voltage((double)cte_prop * e);
 
 }
