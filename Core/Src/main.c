@@ -61,9 +61,9 @@ double medidas[num_muestras];
 uint32_t i = 0;
 char str_name_reducer[100];
 char str_name[20001];
-double kp = 10;
-double kd = 10;
-double ki = 1;
+double kp = 15;
+double kd = 1;
+double ki = 0.1;
 double referencia = 0;
 double current_value = 0;
 double diff = 0;
@@ -78,6 +78,8 @@ bool FLAG_TRANSFER = false;
 bool FLAG_PROPORTIONAL_CONTROLER = false;
 bool FLAG_DERIVATIVE_CONTROLER = false;
 bool FLAG_INTEGRATOR_CONTROLER = false;
+bool FLAG_COUNT_OVERFLOW = false;
+
 //enum
 enum Controlador{Lineal, Derivativo, Integrador};
 /* USER CODE END PV */
@@ -150,7 +152,7 @@ int main(void)
 	//reductora();// Uncommenting this line to calculate the reducer value
 	 //funtion_trasfer(12);// Uncommenting this line to calculate the function transfer
 
-	 setref(M_PI,2); // set a first  ref to linear controler
+	 setref(3*M_PI,1); // set a first  ref to linear controler
 
 	while (1)
 	{
@@ -235,21 +237,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			current_value =__HAL_TIM_GET_COUNTER(&htim2);
 			if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)){
 
-
-				if(current_value <= last_value){
-					   diff = last_value - current_value;
-				}
-				else{
+				if(FLAG_COUNT_OVERFLOW == true && current_value > last_value ){
 					diff = (max_enconder_count-current_value) + last_value;
 				}
+				if(current_value <= last_value || current_value <= last_value){
+					diff = last_value - current_value;
+					FLAG_COUNT_OVERFLOW = false;
+				}
+
+
 
 			}
 			else {
 
-				if (current_value < last_value) {
+				if (FLAG_COUNT_OVERFLOW == true && current_value < last_value) {
 					diff = (max_enconder_count - last_value) + current_value;
 				} else {
 					diff = current_value - last_value;
+					FLAG_COUNT_OVERFLOW = false;
 
 				}
 
@@ -300,10 +305,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 		else if(htim->Instance==TIM2){
 
-				cuenta = 1;
-				sprintf(str_name_reducer, "Cuenta = %f", cuenta);
-				HAL_UART_Transmit(&huart2,(uint8_t*) str_name_reducer, strlen(str_name_reducer), HAL_MAX_DELAY);
-
+			FLAG_COUNT_OVERFLOW = true;
 
 
 
