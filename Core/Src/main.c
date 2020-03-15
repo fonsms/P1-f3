@@ -63,7 +63,7 @@ char str_name_reducer[100];
 char str_name[20001];
 double kp = 10;
 double kd = 10;
-double ki = 10;
+double ki = 1;
 double referencia = 0;
 double current_value = 0;
 double diff = 0;
@@ -90,7 +90,7 @@ void obtenerdatos(double_t V);
 void selec_voltage(double_t V);
 void stop();
 void enviarcuenta();
-void controlador_lineal(double pos_i);
+void controlador_proporcional(double pos_i);
 void controlador_derivativo(double pos_i);
 void controlador_integrador(double pos_i);
 void reductora();
@@ -150,14 +150,14 @@ int main(void)
 	//reductora();// Uncommenting this line to calculate the reducer value
 	 //funtion_trasfer(12);// Uncommenting this line to calculate the function transfer
 
-	 setref(M_PI,0); // set a first  ref to linear controler
+	 setref(M_PI,2); // set a first  ref to linear controler
 
 	while (1)
 	{
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//		controlador_lineal(pos_i);
+//		controlador_proporcional(pos_i);
 
 
 
@@ -230,7 +230,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 	if (htim->Instance==TIM6) {
 
-		if (FLAG_PROPORTIONAL_CONTROLER == true) {
+		if (FLAG_PROPORTIONAL_CONTROLER == true||FLAG_DERIVATIVE_CONTROLER == true ||FLAG_INTEGRATOR_CONTROLER == true) {
 
 			current_value =__HAL_TIM_GET_COUNTER(&htim2);
 			if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)){
@@ -258,12 +258,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			last_value = current_value;
 			pos_i = pos_i + diff;
 			if (FLAG_PROPORTIONAL_CONTROLER == true) {
-				controlador_lineal(pos_i);
+				controlador_proporcional(pos_i);
 			}
-			else if (FLAG_DERIVATIVE_CONTROLER == true) {
+			if (FLAG_DERIVATIVE_CONTROLER == true) {
 				controlador_derivativo(pos_i);
 
-			} else if (FLAG_INTEGRATOR_CONTROLER == true) {
+			}
+			if (FLAG_INTEGRATOR_CONTROLER == true) {
 				controlador_integrador(pos_i);
 			}
 
@@ -419,10 +420,11 @@ void setref(double ref, enum Controlador controlador){
 	if (controlador == Lineal) {
 		FLAG_PROPORTIONAL_CONTROLER = true;
 	}
-	else if (controlador == Derivativo) {
+	if (controlador == Derivativo) {
 		FLAG_DERIVATIVE_CONTROLER = true;
 
-	} else if (controlador == Integrador) {
+	}
+	if (controlador == Integrador) {
 		FLAG_INTEGRATOR_CONTROLER = true;
 	}
 
@@ -433,7 +435,7 @@ void setref(double ref, enum Controlador controlador){
  * @brief	Linear Controller
  * @retval None
  */
-void controlador_lineal(double pos_i){
+void controlador_proporcional(double pos_i){
 if (referencia <0) {
 	e = referencia + (pos_i * 2 * M_PI / pulse_per_revolution);
 }else {
@@ -452,8 +454,8 @@ if (referencia <0) {
 	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
 }
 
-	selec_voltage((double)(kp * e +kd * (e-e_last)));
 
+	selec_voltage((double)(kp * e +kd * (e-e_last)));
 }
 void controlador_integrador(double pos_i){
 if (referencia <0) {
