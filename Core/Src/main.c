@@ -63,7 +63,7 @@ uint32_t i = 0;
 char str_name_reducer[100];
 char str_name[20001];
 double pos_buffer[num_muestras_controlador+1];
-double kp = 100;
+double kp = 10;
 double kd = 1;
 double ki = 0.1;
 double referencia = 0;
@@ -155,7 +155,7 @@ int main(void)
 	//reductora();// Uncommenting this line to calculate the reducer value
 	//funtion_trasfer(12);// Uncommenting this line to calculate the function transfer
 
-	setref(M_PI,0); // set a first  ref to linear controler
+	setref(-3*M_PI,1); // set a first  ref to linear controler
 
 	while (1)
 	{
@@ -241,10 +241,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2)){
 
 				if(FLAG_COUNT_OVERFLOW == true && current_value > last_value ){
-					diff = (max_enconder_count-current_value) + last_value;
+					diff = -((max_enconder_count-current_value) + last_value);
 				}
 				if(current_value <= last_value || current_value <= last_value){
-					diff = last_value - current_value;
+					diff = -(last_value - current_value);
 					FLAG_COUNT_OVERFLOW = false;
 				}
 
@@ -463,38 +463,20 @@ void setref(double ref, enum Controlador controlador){
  * @retval None
  */
 void controlador_proporcional(double pos_i){
-	if (referencia <0) {
-		e = referencia + (pos_i * 2 * M_PI / pulse_per_revolution);
-	}else {
-		e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
-	}
 
+	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
 	selec_voltage((double)kp * e);
 
 }
 void controlador_derivativo(double pos_i){
-	if (referencia <0) {
-		e_last = e;
-		e = referencia + (pos_i * 2 * M_PI / pulse_per_revolution);
-	}else {
-		e_last = e;
-		e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
-	}
 
-
+	e_last = e;
+	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
 	selec_voltage((double)(kp * e +kd * (e-e_last)));
 }
 void controlador_integrador(double pos_i){
-	if (referencia <0) {
-
-		e = referencia + (pos_i * 2 * M_PI / pulse_per_revolution);
-		e_sum= e_sum + e;
-	}else {
-
-		e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
-		e_sum = e_sum + e;
-	}
-
+	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
+	e_sum = e_sum + e;
 	selec_voltage((double)(kp * e +ki * e_sum));
 
 }
