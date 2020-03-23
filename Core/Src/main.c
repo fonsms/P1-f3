@@ -63,9 +63,9 @@ uint32_t i = 0;
 char str_name_reducer[100];
 char str_name[20001];
 double pos_buffer[num_muestras_controlador+1];
-double kp = 21;
-double kd = 100;
-double ki = 0.10;
+double kp = 0.5;
+double kd = 21;
+double ki = 0.1;
 double referencia = 0;
 double current_value = 0;
 double diff = 0;
@@ -80,11 +80,12 @@ bool FLAG_TRANSFER = false;
 bool FLAG_CONTROLLER_SENT_CONTROLER = false;
 bool FLAG_DERIVATIVE_CONTROLER = false;
 bool FLAG_INTEGRATOR_CONTROLER = false;
+bool FLAG_PID_CONTROLER = false;
 bool FLAG_COUNT_OVERFLOW = false;
 bool FLAG_CONTROLLER_SENT = false;
 
 //enum
-enum Controlador{Proportional, Derivativo, Integrador};
+enum Controlador{Proportional, Derivativo, Integrador,PID};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,6 +99,7 @@ void enviarcuenta();
 void controlador_proporcional(double pos_i);
 void controlador_derivativo(double pos_i);
 void controlador_integrador(double pos_i);
+void controlador_pid(double pos_i);
 void reductora();
 void setref(double ref,enum Controlador controlador);
 void funtion_trasfer(double_t V);
@@ -160,12 +162,12 @@ int main(void)
 	HAL_Delay(1000);
 	//funtion_trasfer(12);
 	 */
-	/*
+
 	//Uncommenting these lines to use the controller and rotate the motor to the desired position.
 	selec_voltage(0);
 	HAL_Delay(1000);
-	setref(M_PI,Proportional); // set a first  ref to linear controler
-	 */
+	setref(M_PI,2); // set a first  ref to linear controler
+
 	while (1)
 	{
 		/* USER CODE END WHILE */
@@ -244,7 +246,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 	if (htim->Instance==TIM6) {
 		//Timer for controller
-		if (FLAG_CONTROLLER_SENT_CONTROLER == true||FLAG_DERIVATIVE_CONTROLER == true ||FLAG_INTEGRATOR_CONTROLER == true) {
+		if (FLAG_CONTROLLER_SENT_CONTROLER == true||FLAG_DERIVATIVE_CONTROLER == true ||FLAG_INTEGRATOR_CONTROLER == true ||FLAG_PID_CONTROLER == true) {
 			i += 1;
 			//save the current encoder counter value
 			current_value =__HAL_TIM_GET_COUNTER(&htim2);
@@ -289,6 +291,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			}
 			if (FLAG_INTEGRATOR_CONTROLER == true) {
 				controlador_integrador(pos_i);
+			}
+			if (FLAG_PID_CONTROLER == true) {
+				controlador_pid(pos_i);
 			}
 
 
@@ -451,7 +456,7 @@ void reductora(){
 void setref(double ref, enum Controlador controlador){
 	referencia = ref;
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
-	if (controlador == Lineal) {
+	if (controlador == Proportional) {
 		FLAG_CONTROLLER_SENT_CONTROLER = true;
 		FLAG_CONTROLLER_SENT = true;
 	}
@@ -463,12 +468,16 @@ void setref(double ref, enum Controlador controlador){
 		FLAG_INTEGRATOR_CONTROLER = true;
 		FLAG_CONTROLLER_SENT = true;
 	}
+	if (controlador == PID) {
+		FLAG_PID_CONTROLER = true;
+		FLAG_CONTROLLER_SENT = true;
+	}
 
 	HAL_TIM_Base_Start_IT(&htim6);
 }
 
 /**
- * @brief	Linear Controller
+ * @brief	Proportional Controller
  * @retval None
  */
 void controlador_proporcional(double pos_i){
@@ -477,18 +486,41 @@ void controlador_proporcional(double pos_i){
 	selec_voltage((double)kp * e);
 
 }
+/**
+ * @brief	Derivative Controller
+ * @retval None
+ */
 void controlador_derivativo(double pos_i){
 
 	e_last = e;
 	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
 	selec_voltage((double)(kp * e +kd * (e-e_last)));
 }
+/**
+ * @brief	Integrator Controller
+ * @retval None
+ */
 void controlador_integrador(double pos_i){
 	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
 	e_sum = e_sum + e;
 	selec_voltage((double)(kp * e +ki * e_sum));
 
 }
+/**
+ * @brief	PID Controller
+ * @retval None
+ */
+void controlador_pid(double pos_i){
+	e_last = e;
+	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
+	e_sum = e_sum + e;
+	selec_voltage((double)(kp * e +kd *(e-e_last)+ki * e_sum));
+
+}
+/**
+ * @brief	Funtion Transfer
+ * @retval None
+ */
 void funtion_trasfer(double_t V){
 	FLAG_TRANSFER = true;
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
