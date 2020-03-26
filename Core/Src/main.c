@@ -54,6 +54,7 @@
 #define max_enconder_count 65535
 #define num_muestras 1200
 #define num_muestras_controlador 4000
+#define k_tiempo 0.001
 int32_t count = 0;
 double cuenta2 = 0;
 double cuenta = 0;
@@ -63,9 +64,9 @@ uint32_t i = 0;
 char str_name_reducer[100];
 char str_name[20001];
 double pos_buffer[num_muestras_controlador+1];
-double kp = 0.5;
-double kd = 21;
-double ki = 0.1;
+double kp = 65.1094;
+double kd = 1.2656;
+double ki = 0.0019;
 double referencia = 0;
 double current_value = 0;
 double diff = 0;
@@ -164,10 +165,10 @@ int main(void)
 	 */
 
 	//Uncommenting these lines to use the controller and rotate the motor to the desired position.
-	selec_voltage(0);
+/*	selec_voltage(0);
 	HAL_Delay(1000);
-	setref(M_PI,2); // set a first  ref to linear controler
-
+	setref(0.3*M_PI,3); // set a first  ref to linear controler
+*/
 	while (1)
 	{
 		/* USER CODE END WHILE */
@@ -494,7 +495,7 @@ void controlador_derivativo(double pos_i){
 
 	e_last = e;
 	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
-	selec_voltage((double)(kp * e +kd * (e-e_last)));
+	selec_voltage((double)(kp * e +kd * (e-e_last)/k_tiempo));
 }
 /**
  * @brief	Integrator Controller
@@ -503,7 +504,7 @@ void controlador_derivativo(double pos_i){
 void controlador_integrador(double pos_i){
 	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
 	e_sum = e_sum + e;
-	selec_voltage((double)(kp * e +ki * e_sum));
+	selec_voltage((double)(kp * e +ki * e_sum * k_tiempo));
 
 }
 /**
@@ -514,7 +515,7 @@ void controlador_pid(double pos_i){
 	e_last = e;
 	e = referencia - (pos_i * 2 * M_PI / pulse_per_revolution);
 	e_sum = e_sum + e;
-	selec_voltage((double)(kp * e +kd *(e-e_last)+ki * e_sum));
+	selec_voltage((double)(kp * e +kd *(e-e_last)/k_tiempo +ki * e_sum * k_tiempo));
 
 }
 /**
